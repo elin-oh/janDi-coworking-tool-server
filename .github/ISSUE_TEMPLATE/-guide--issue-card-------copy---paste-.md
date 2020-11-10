@@ -8,9 +8,9 @@ assignees: ''
 ---
 
 ### ISSUE
-- Group:  `client`, `server`, `sr`
-- Type: `bug`, `feature`, `delete`
-- Detail: fix actions from client redux
+- Group:  `server`
+- Type: `feature`, 
+- Detail: 
 
 ### TODO
 1. [ ] Job1
