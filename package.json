@@ -1,0 +1,25 @@
+{
+  "name": "jandi-coworking-tool-server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {},
+  "devDependencies": {
+    "eslint": "^7.13.0",
+    "eslint-plugin-react": "^7.21.5"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/codestates/janDi-coworking-tool-server.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/codestates/janDi-coworking-tool-server/issues"
+  },
+  "homepage": "https://github.com/codestates/janDi-coworking-tool-server#readme"
+}
