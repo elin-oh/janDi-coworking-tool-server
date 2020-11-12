@@ -14,6 +14,7 @@ module.exports = {
         res.status(200).end();
     },
     login: async (req, res) => {
+
         const { email, password } = req.body;
         var sess = req.session;
 
@@ -40,10 +41,56 @@ module.exports = {
             });
     },
     logout: async (req, res) => {
-        res.status(200).end();
+
+        var sess = req.session;
+
+        if (sess === null) {
+
+            res.status(400).send('you are currently not logined');
+        }
+        else {
+
+            sess.destroy(err => {
+
+                if (err) {
+                    console.log(err);
+                } else {
+                    res.status(205).send("successfully signed out!");
+                }
+            });
+        }
+
+
     },
     userpost: async (req, res) => {
-        res.status(200).end();
+
+        const { email, userName, password } = req.body;
+
+        if (!email || !password || !userName) {
+            res.status(422).send('insufficient parameters supplied');
+        }
+        else {
+
+            user
+                .findOrCreate({
+                    where: {
+                        email: email
+                    },
+                    defaults: {
+                        password: password,
+                        userName: userName,
+                    }
+                })
+                .then(async ([user, created]) => {
+                    if (!created) {
+                        return res.status(409).send('email exists');
+                    }
+                    const data = await user.get({ plain: true });
+                    res.status(201).json(data);
+                });
+
+        }
+
     },
     projectpost: async (req, res) => {
         res.status(200).end();
