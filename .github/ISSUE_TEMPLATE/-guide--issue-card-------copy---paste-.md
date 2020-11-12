@@ -9,7 +9,7 @@ assignees: ''
 
 ### ISSUE
 - Group:  `server`
-- Type: `feature`, 
+- Type: `feature`
 - Detail: 
 
 ### TODO
