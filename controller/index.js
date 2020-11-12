@@ -1,6 +1,7 @@
 const { user, project, todolist, users_projects } = require('../../models');
 
 module.exports = {
+  
     userinfo: async (req, res) => {
         res.status(200).end();
     },
@@ -14,6 +15,7 @@ module.exports = {
         res.status(200).end();
     },
     login: async (req, res) => {
+
 
         const { email, password } = req.body;
         var sess = req.session;
@@ -39,6 +41,7 @@ module.exports = {
             .catch(err => {
                 res.status(404).send(err);
             });
+
     },
     logout: async (req, res) => {
 
@@ -113,4 +116,5 @@ module.exports = {
     todolistdelete: async (req, res) => {
         res.status(200).end();
     },
+
 }
