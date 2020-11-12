@@ -38,10 +38,7 @@ db.Sequelize = Sequelize;
 
 const { user, project, todolist } = sequelize.models;
 
-project.hasOne(user);
-user.belongsTo(project);
-
-user.hasMany(todolist);
+user.hasMany(todolist, { foreignKey: 'id' });
 todolist.belongsTo(user);
 
 project.hasMany(todolist);

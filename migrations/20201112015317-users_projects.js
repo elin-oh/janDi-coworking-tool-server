@@ -1,15 +1,14 @@
 'use strict';
+
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.createTable('todolists', {
+
+    await queryInterface.createTable('users_projects', {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
         type: Sequelize.INTEGER
-      },
-      body: {
-        type: Sequelize.STRING
       },
       projectId: {
         type: Sequelize.INTEGER,
@@ -19,20 +18,16 @@ module.exports = {
         type: Sequelize.INTEGER,
         references: { model: 'users', key: 'id' }
       },
-      IsChecked: {
-        type: Sequelize.BOOLEAN
-      },
-      createdAt: {
-        allowNull: false,
-        type: Sequelize.DATE
-      },
-      updatedAt: {
-        allowNull: false,
-        type: Sequelize.DATE
-      }
     });
+
   },
+
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.dropTable('todolists');
+    /**
+     * Add reverting commands here.
+     *
+     * Example:
+     * await queryInterface.dropTable('users');
+     */
   }
 };
