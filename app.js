@@ -1,11 +1,11 @@
 const express = require('express')
 const app = express()
-const cors = require('cors');
-require("./models");
-
+const cors = require('cors')
 const port = 3000
 
-const mainController = require("./controller");
+const indexRouter = require('./routes/index');
+
+app.use(express.json());
 
 app.use(
   session({
@@ -25,15 +25,6 @@ app.use(
   })
 );
 
+app.use('/', indexRouter);
 
-app.post("/login", mainController.signInController);
-
-
-
-// app.get('/', (req, res) => {
-//   res.send('Hello World!')
-// })
-
-// app.listen(port, () => {
-//   console.log(`Example app listening at http://localhost:${port}`)
-// })
+module.exports = app;
