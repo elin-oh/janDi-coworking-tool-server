@@ -1,9 +1,9 @@
 const express = require('express')
 const app = express()
 const cors = require('cors')
-const port = 3000
+const session = require('express-session')
 
-const indexRouter = require('./routes/index');
+const indexRouter = require('./routers/index');
 
 app.use(express.json());
 
@@ -26,5 +26,6 @@ app.use(
 );
 
 app.use('/', indexRouter);
+app.listen(3000)
 
 module.exports = app;
