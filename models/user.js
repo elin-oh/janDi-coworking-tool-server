@@ -16,9 +16,7 @@ module.exports = (sequelize, DataTypes) => {
   user.init({
     email: DataTypes.STRING,
     userName: DataTypes.STRING,
-    password: DataTypes.STRING,
-    createdAt: { type: Sequelize.DATE, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'), },
-    updatedAt: { type: Sequelize.DATE, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'), },
+    password: DataTypes.STRING
   }, {
     sequelize,
     modelName: 'user',
