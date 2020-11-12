@@ -1,13 +1,29 @@
-const express = require('express');
-const logger = require('morgan');
+const express = require('express')
+const app = express()
+const cors = require('cors')
+const port = 3000
 
 const indexRouter = require('./routes/index');
 
-const app = express();
-
-app.use(logger('dev'));
 app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+
+app.use(
+  session({
+    secret: 'JANDI',
+    resave: false,
+    saveUninitialized: true
+  })
+);
+
+app.use(express.json());
+
+app.use(
+  cors({
+    origin: ['http://localhost:3000'],
+    methods: ['GET', 'POST'],
+    credentials: true
+  })
+);
 
 app.use('/', indexRouter);
 
