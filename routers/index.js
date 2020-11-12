@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Controller = require('../controller');
 
+router.get('/', function (req, res) {res.send('Hello World!');})
 router.get('/userinfo', Controller.userinfo)
 router.get('/projectinfo', Controller.projectinfo)
 router.get('/todolistinfo', Controller.todolistinfo)
