@@ -2,28 +2,28 @@
 
 module.exports = {
   up: (queryInterface, Sequelize) => {
-    return queryInterface.bulkInsert('projects', [
+    return queryInterface.bulkInsert('user_project', [
       {
-        projectName: 'Apr',
-        adminUserId: 1,
+        projectId:1,
+        userId:1,
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
-        projectName: 'Bpr',
-        adminUserId: 2,
+        projectId:2,
+        userId:2,
         createdAt: new Date(),
         updatedAt: new Date()
       },
       {
-        projectName: 'Cpr',
-        adminUserId: 2,
+        projectId:3,
+        userId:1,
         createdAt: new Date(),
         updatedAt: new Date()
       }
-    ]);
+  ]);
   },
   down: (queryInterface, Sequelize) => {
-    return queryInterface.bulkDelete('projects', null, {});
+    return queryInterface.bulkDelete('user_project', null, {});
   }
 };

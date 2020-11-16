@@ -3,7 +3,7 @@
 module.exports = {
   up: async (queryInterface, Sequelize) => {
 
-    await queryInterface.createTable('users_projects', {
+    await queryInterface.createTable('user_project', {
       id: {
         allowNull: false,
         autoIncrement: true,
@@ -18,6 +18,14 @@ module.exports = {
         type: Sequelize.INTEGER,
         references: { model: 'users', key: 'id' }
       },
+      createdAt: {
+        allowNull: false,
+        type: Sequelize.DATEONLY,
+      },
+      updatedAt: {
+        allowNull: false,
+        type: Sequelize.DATEONLY
+      }
     });
 
   },
