@@ -223,7 +223,6 @@ module.exports = {
             console.log("!!!!!!!!!!!!!!!!!!");
         }
 
-
         let currentTodolist = await todolist.findByPk(1)
 
         if (projectId !== null) {
