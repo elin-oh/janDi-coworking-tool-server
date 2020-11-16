@@ -41,7 +41,7 @@ const { user, project, todolist } = sequelize.models;
 user.hasMany(todolist, { foreignKey: 'id' });
 todolist.belongsTo(user);
 
-project.hasMany(todolist);
+project.hasMany(todolist, { foreignKey: 'id', onDelete: 'cascade' });
 todolist.belongsTo(project);
 
 project.belongsToMany(user, { through: 'user_project', foreignKey: 'id', });
