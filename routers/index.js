@@ -4,9 +4,8 @@ const Controller = require('../controller');
 
 router.get('/', function (req, res) {res.send('Hello World!');})
 router.get('/userinfo', Controller.userinfo)
+router.get('/main', Controller.maininfo)
 router.get('/projectinfo', Controller.projectinfo)
-router.get('/todolistinfo', Controller.todolistinfo)
-router.get('/user_project', Controller.user_project)
 router.post('/login', Controller.login)
 router.post('/logout', Controller.logout)
 router.post('/userpost', Controller.userpost)

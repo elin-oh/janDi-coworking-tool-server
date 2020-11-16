@@ -38,13 +38,12 @@ db.Sequelize = Sequelize;
 
 const { user, project, todolist } = sequelize.models;
 
-user.hasMany(todolist, { foreignKey: 'id' });
+user.hasMany(todolist, { foreignKey: 'userId' });
 todolist.belongsTo(user);
 
 project.hasMany(todolist, { foreignKey: 'id', onDelete: 'cascade' });
 todolist.belongsTo(project);
 
-project.belongsToMany(user, { through: 'user_project', foreignKey: 'id', });
-user.belongsToMany(project, { through: 'user_project', foreignKey: 'id', });
+user.belongsToMany(project, { through: 'user_project' })
 
 module.exports = db;
