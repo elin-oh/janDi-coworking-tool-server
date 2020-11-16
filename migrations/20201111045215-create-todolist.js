@@ -20,7 +20,9 @@ module.exports = {
         references: { model: 'users', key: 'id' }
       },
       IsChecked: {
-        type: Sequelize.BOOLEAN
+        type: Sequelize.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
       },
       createdAt: {
         allowNull: false,

@@ -106,7 +106,6 @@ module.exports = {
   login: async (req, res) => {
     const { email, password } = req.body;
     var sess = req.session;
-
     user
     .findOne({
         where: {
@@ -175,25 +174,135 @@ module.exports = {
 
     },
     projectpost: async (req, res) => {
-        res.status(200).end();
+
+        const { projectName, adminUserId } = req.body;
+
+        if (!projectName || !adminUserId) {
+            res.status(422).send('insufficient parameters supplied');
+        }
+        else {
+
+            project
+                .create({
+                    projectName: projectName,
+                    adminUserId: adminUserId,
+                })
+                .then(async (project) => {
+                    const data = await project.get({ plain: true });
+                    res.status(201).json(data);
+                });
+        }
     },
     todolistpost: async (req, res) => {
-        res.status(200).end();
+
+        const { body, projectId, userId } = req.body;
+
+        if (!body || !projectId || !userId) {
+            res.status(422).send('insufficient parameters supplied');
+        }
+        else {
+
+            todolist
+                .create({
+                    body: body,
+                    projectId: projectId,
+                    userId: userId,
+                    IsChecked: false,
+                })
+                .then(async (todolist) => {
+                    const data = await todolist.get({ plain: true });
+                    res.status(201).json(data);
+                });
+        }
     },
     userchange: async (req, res) => {
-        res.status(200).end();
+
+        const { email, userName, password } = req.body;
+        let sessUserId = req.session.userid;
+
+        let userCurrent = await user.findByPk(1)
+
+        if (email !== null) {
+            userCurrent.email = email;
+        }
+        if (userName !== null) {
+            userCurrent.userName = userName;
+        }
+        if (password !== null) {
+            userCurrent.password = password;
+        }
+
+        let result = await userCurrent.save();
+        res.status(202).json(result);
     },
     projectchange: async (req, res) => {
-        res.status(200).end();
+
+        const { id, projectName, adminUserId } = req.body;
+
+        let currentProject = await project.findByPk(id)
+
+        if (projectName !== null) {
+            currentProject.projectName = projectName;
+        }
+        if (adminUserId !== null) {
+            currentProject.adminUserId = adminUserId;
+        }
+
+        let result = await currentProject.save();
+        res.status(202).json(result);
+
     },
     todolistchange: async (req, res) => {
-        res.status(200).end();
+
+        const { id, projectId, userId, IsChecked } = req.body;
+
+        console.log(req.body)
+
+        if (JSONparse(id) === 1) {
+
+            console.log("!!!!!!!!!!!!!!!!!!");
+        }
+
+        let currentTodolist = await todolist.findByPk(1)
+
+        if (projectId !== null) {
+            currentTodolist.projectId = projectId;
+        }
+        if (userId !== null) {
+            currentTodolist.userId = userId;
+        }
+        if (IsChecked !== null) {
+            currentTodolist.IsChecked = IsChecked;
+        }
+
+        let result = await currentTodolist.save();
+        res.status(202).json(result);
+
     },
-    projectdelete: async (req, res) => {
-        res.status(200).end();
+    projectdelete: async (req, res) => { // 프로젝트 삭제시 프로젝트와 연관된 todolist도 같이 삭제 되어야 함,
+
+        const { id } = req.body;
+
+        await todolist.findAll({ where: { projectId: id } })
+            .then((data) => {
+                data.destroy();
+            })
+
+        await project.findOne({ where: { id: id } })
+            .then((data) => {
+                data.destroy();
+                res.status(202).json("project deleted");
+            })
+
     },
-    todolistdelete: async (req, res) => {
-        res.status(200).end();
+    todolistdelete: async (req, res) => {  // toddlist는 list 한 개만 삭제 해야 함.
+
+        const { id } = req.body;
+        let todolistId = id;
+
+        let currentTodolist = await todolist.findByPk(1)
+        await currentTodolist.destroy();
+        res.status(202).json("todolist deleted");
     },
 
 }
