@@ -44,6 +44,6 @@ todolist.belongsTo(user);
 project.hasMany(todolist, { foreignKey: 'projectId', onDelete: 'cascade' });
 todolist.belongsTo(project);
 
-user.belongsToMany(project, { through: 'user_project' })
+user.belongsToMany(project, { through: 'users_projects' })
 
 module.exports = db;
