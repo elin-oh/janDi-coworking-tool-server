@@ -2,12 +2,12 @@ const { user, project, todolist, users_projects, sequelize } = require('../model
 
 module.exports = {
     userinfo: async (req, res) => {
-        // if (!req.session.userid) {
-        //     return res.status(401).send('need user session')
-        // }
+        if (!req.session.userid) {
+            return res.status(401).send('need user session')
+        }
         user
             .findOne({
-                where: { id: 1 },
+                where: { id: req.session.userid },
                 attributes: ['email', 'userName'],
                 include: [{
                     model: todolist,
@@ -26,12 +26,12 @@ module.exports = {
 
     },
     maininfo: async (req, res) => {
-        // if (!req.session.userid) {
-        //     return res.status(401).send('need user session')
-        // }
+        if (!req.session.userid) {
+            return res.status(401).send('need user session')
+        }
         user
             .findOne({
-                where: { id: 1 },
+                where: { id: req.session.userid },
                 attributes: [],
                 include: {
                     model: project,
@@ -55,14 +55,14 @@ module.exports = {
     },
 
     projectinfo: async (req, res) => {
-        // if (!req.session.userid) {
-        //     return res.status(401).send('need user session')
-        // }
+        if (!req.session.userid) {
+            return res.status(401).send('need user session')
+        }
         if (req.query.day) {
             let idArr = []
             let memberArr = []
             await users_projects.findAll({
-                where:{projectId:1}
+                where:{ projectId:req.query.pid }
             })
             .then(result => {
                 for(let i = 0; i< result.length; i++){
@@ -76,17 +76,16 @@ module.exports = {
             }
             
             project.findOne({
-                where:{id:1},
+                where:{id:req.session.userid},
                 attributes:['adminUserId'],
                 raw:true,
                 include:{
                     model: todolist,
+                    where:{ createdAt: req.query.day },
                     attributes:['id','body','IsChecked']
                 }
             })
             .then(result => {
-                console.log('result     :'+result)
-                console.log("member    :"+memberArr)
                 result['member'] = memberArr
                 res.status(200).send(result)
             })
@@ -95,7 +94,7 @@ module.exports = {
             let idArr = []
             let memberArr = []
             await users_projects.findAll({
-                where:{ projectId:1 }
+                where:{ projectId: req.query.pid }
             })
             .then(result => {
                 for(let i = 0; i< result.length; i++){
@@ -109,7 +108,7 @@ module.exports = {
             }
             
             project.findOne({
-                where:{ id:1 },
+                where:{ id:req.query.pid },
                 attributes:['adminUserId'],
                 raw:true,
                 include:{
