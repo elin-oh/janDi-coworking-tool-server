@@ -85,7 +85,7 @@ module.exports = {
         else {
             user
                 .findOne({
-                    where: { id: 1 },
+                    where: { id: req.session.userid },
                     include: {
                         model: project,
                         attributes: ['id', 'projectName', 'adminUserId'],
