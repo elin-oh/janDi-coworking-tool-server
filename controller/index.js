@@ -8,14 +8,13 @@ module.exports = {
         user
             .findOne({
                 where: { id: req.session.userid },
-                attributes: ['password'],
+                attributes: ['email','userName'],
                 include: [{
                     model: todolist,
                     attributes: [
-                        [sequelize.fn('COUNT', '*'), 'todoTotalCount'],
-                        [sequelize.fn('COUNT', sequelize.col('IsChecked')), 'todoDoneCount']
+                        [sequelize.fn('COUNT', 'id'), 'todoTotalCount'],
+                        [sequelize.literal(`SUM(IsChecked)`),'todoDoneCount']
                     ],
-                    having: ["COUNT(todolist.IsChecked) = true"]
                 }]
             })
             .then(result => {
@@ -85,7 +84,7 @@ module.exports = {
         else {
             user
                 .findOne({
-                    where: { id: 1 },
+                    where: { id: req.session.userid },
                     include: {
                         model: project,
                         attributes: ['id', 'projectName', 'adminUserId'],
@@ -223,7 +222,7 @@ module.exports = {
     todolistpost: async (req, res) => {
 
         const { body, projectId, email } = req.body;
-        let currentUserId;
+        let currentUserId 
 
         if (!body || !projectId) {
             res.status(422).send('insufficient parameters supplied');
