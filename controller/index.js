@@ -2,18 +2,18 @@ const { user, project, todolist, users_projects, sequelize } = require('../model
 
 module.exports = {
     userinfo: async (req, res) => {
-        if (!req.session.userid) {
-            return res.status(401).send('need user session')
-        }
+        // if (!req.session.userid) {
+        //     return res.status(401).send('need user session')
+        // }
         user
             .findOne({
-                where: { id: req.session.userid },
-                attributes: ['email','userName'],
+                where: { id: 1 },
+                attributes: ['email', 'userName'],
                 include: [{
                     model: todolist,
                     attributes: [
                         [sequelize.fn('COUNT', 'id'), 'todoTotalCount'],
-                        [sequelize.literal(`SUM(IsChecked)`),'todoDoneCount']
+                        [sequelize.literal(`SUM(IsChecked)`), 'todoDoneCount']
                     ],
                 }]
             })
@@ -26,12 +26,12 @@ module.exports = {
 
     },
     maininfo: async (req, res) => {
-        if (!req.session.userid) {
-            return res.status(401).send('need user session')
-        }
+        // if (!req.session.userid) {
+        //     return res.status(401).send('need user session')
+        // }
         user
             .findOne({
-                where: { id: req.session.userid },
+                where: { id: 1 },
                 attributes: [],
                 include: {
                     model: project,
@@ -55,13 +55,13 @@ module.exports = {
     },
 
     projectinfo: async (req, res) => {
-        if (!req.session.userid) {
-            return res.status(401).send('need user session')
-        }
+        // if (!req.session.userid) {
+        //     return res.status(401).send('need user session')
+        // }
         if (req.query.day) {
             user
                 .findOne({
-                    where: { id: req.session.userid },
+                    where: { id: 31 },
                     attributes: [],
                     include: {
                         model: project,
@@ -82,22 +82,38 @@ module.exports = {
                 });
         }
         else {
-            user
-                .findOne({
-                    where: { id: req.session.userid },
-                    include: {
-                        model: project,
-                        attributes: ['id', 'projectName', 'adminUserId'],
-                        through: { attributes: [] },
-                        include: {
-                            model: todolist,
-                            attributes: ['id', 'body', 'IsChecked']
-                        }
-                    }
-                })
-                .then(result => {
-                    res.status(200).json(result.projects)
-                })
+            let idArr = []
+            let memberArr = []
+            await users_projects.findAll({
+                where:{projectId:1}
+            })
+            .then(result => {
+                for(let i = 0; i< result.length; i++){
+                    idArr.push(result[i].userId)
+                }
+            })
+
+            for(let i = 0; i < idArr.length; i++){
+                await user.findByPk(idArr[i])
+                .then((member)=>{memberArr.push(member.userName)})
+            }
+            
+            project.findOne({
+                where:{id:1},
+                attributes:['adminUserId'],
+                raw:true,
+                include:{
+                    model: todolist,
+                    attributes:['id','body','IsChecked']
+                }
+            })
+            .then(result => {
+                console.log('result     :'+result)
+                console.log("member    :"+memberArr)
+                result['member'] = memberArr
+                res.send(result)
+            })
+
         }
     },
 
@@ -121,7 +137,8 @@ module.exports = {
                     res.status(200).json({
                         id: result.id,
                         email: result.email,
-                        userName: result.userName
+                        userName: result.userName,
+                        password: result.password
                     });
                 }
             })
@@ -221,7 +238,7 @@ module.exports = {
     todolistpost: async (req, res) => {
 
         const { body, projectId, email } = req.body;
-        let currentUserId 
+        let currentUserId
 
         if (!body || !projectId) {
             res.status(422).send('insufficient parameters supplied');
