@@ -8,12 +8,12 @@ module.exports = {
         user
             .findOne({
                 where: { id: req.session.userid },
-                attributes: ['email','userName'],
+                attributes: ['email', 'userName'],
                 include: [{
                     model: todolist,
                     attributes: [
                         [sequelize.fn('COUNT', 'id'), 'todoTotalCount'],
-                        [sequelize.literal(`SUM(IsChecked)`),'todoDoneCount']
+                        [sequelize.literal(`SUM(IsChecked)`), 'todoDoneCount']
                     ],
                 }]
             })
@@ -55,13 +55,13 @@ module.exports = {
     },
 
     projectinfo: async (req, res) => {
-        if (!req.session.userid) {
-            return res.status(401).send('need user session')
-        }
+        // if (!req.session.userid) {
+        //     return res.status(401).send('need user session')
+        // }
         if (req.query.day) {
             user
                 .findOne({
-                    where: { id: req.session.userid },
+                    where: { id: 31 },
                     attributes: [],
                     include: {
                         model: project,
@@ -84,11 +84,10 @@ module.exports = {
         else {
             user
                 .findOne({
-                    where: { id: req.session.userid },
+                    where: { id: 2 },
                     include: {
                         model: project,
                         attributes: ['id', 'projectName', 'adminUserId'],
-                        right: true,
                         through: { attributes: [] },
                         include: {
                             model: todolist,
@@ -222,7 +221,7 @@ module.exports = {
     todolistpost: async (req, res) => {
 
         const { body, projectId, email } = req.body;
-        let currentUserId 
+        let currentUserId
 
         if (!body || !projectId) {
             res.status(422).send('insufficient parameters supplied');
