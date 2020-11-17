@@ -1,4 +1,5 @@
 const { user, project, todolist, users_projects, sequelize } = require('../models');
+const crypto = require('crypto');
 
 module.exports = {
     userinfo: async (req, res) => {
@@ -257,23 +258,46 @@ module.exports = {
     },
     userchange: async (req, res) => {
 
-        const { email, userName, password } = req.body;
-        let sessUserId = req.session.userid;
+        const { userName, currentPassword, newPassword } = req.body;
+        let sessUserId = 11;
+        let result;
+        let hasingPassword;
 
         let userCurrent = await user.findByPk(sessUserId)
 
-        if (email !== null) {
-            userCurrent.email = email;
-        }
         if (userName !== null) {
             userCurrent.userName = userName;
         }
-        if (password !== null) {
-            userCurrent.password = password;
-        }
+        if (currentPassword == null || newPassword == null) {
 
-        let result = await userCurrent.save();
-        res.status(202).json(`id:${result.id}`);
+            res.status(422).send('insufficient parameters supplied');
+
+        } else {
+
+            var shasum = crypto.createHmac('sha512', 'jandikey');
+            shasum.update(currentPassword);
+            hasingPassword = shasum.digest('hex');
+
+            console.log(hasingPassword)
+            console.log(userCurrent.password)
+
+            if (hasingPassword === userCurrent.password) {
+
+                var shasum = crypto.createHmac('sha512', 'jandikey');
+                shasum.update(newPassword);
+                hasingPassword = shasum.digest('hex');
+
+                userCurrent.password = hasingPassword;
+
+                result = await userCurrent.save();
+                res.status(202).json(`id:${result.id}`);
+            }
+            else {
+                res.status(422).send('password not right');
+            }
+            // 서버에 저장된 해싱된 비밀번호랑 입력된 비밀번호가 같은 경우
+            // 맞으면, 새 패스워드를 데이터 베이스에 저장
+        }
     },
     projectchange: async (req, res) => {
 
