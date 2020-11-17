@@ -59,29 +59,6 @@ module.exports = {
         //     return res.status(401).send('need user session')
         // }
         if (req.query.day) {
-            user
-                .findOne({
-                    where: { id: 31 },
-                    attributes: [],
-                    include: {
-                        model: project,
-                        attributes: ['id', 'projectName', 'adminUserId'],
-                        through: { attributes: [] },
-                        include: {
-                            model: todolist,
-                            where: { createdAt: req.query.day },
-                            attributes: ['id', 'body', 'IsChecked']
-                        }
-                    }
-                })
-                .then(result => {
-                    res.status(200).json(result.projects)
-                })
-                .catch(err => {
-                    res.status(500).send(err);
-                });
-        }
-        else {
             let idArr = []
             let memberArr = []
             await users_projects.findAll({
@@ -111,7 +88,38 @@ module.exports = {
                 console.log('result     :'+result)
                 console.log("member    :"+memberArr)
                 result['member'] = memberArr
-                res.send(result)
+                res.status(200).send(result)
+            })
+        }
+        else {
+            let idArr = []
+            let memberArr = []
+            await users_projects.findAll({
+                where:{ projectId:1 }
+            })
+            .then(result => {
+                for(let i = 0; i< result.length; i++){
+                    idArr.push(result[i].userId)
+                }
+            })
+
+            for(let i = 0; i < idArr.length; i++){
+                await user.findByPk(idArr[i])
+                .then((member)=>{memberArr.push(member.userName)})
+            }
+            
+            project.findOne({
+                where:{ id:1 },
+                attributes:['adminUserId'],
+                raw:true,
+                include:{
+                    model: todolist,
+                    attributes:['id','body','IsChecked']
+                }
+            })
+            .then(result => {
+                result['member'] = memberArr
+                res.status(200).send(result)
             })
 
         }
