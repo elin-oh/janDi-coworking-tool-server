@@ -222,18 +222,31 @@ module.exports = {
     },
     todolistpost: async (req, res) => {
 
-        const { body, projectId, userId } = req.body;
+        const { body, projectId, email } = req.body;
+        let currentUserId;
 
-        if (!body || !projectId || !userId) {
+        if (!body || !projectId) {
             res.status(422).send('insufficient parameters supplied');
         }
         else {
+
+            if (!email) {
+
+                currentUserId = req.session.userid;
+            }
+            else {
+                await user.findOne({ where: { email: email } })
+                    .then((data) => {
+
+                        currentUserId = data.id;
+                    })
+            }
 
             todolist
                 .create({
                     body: body,
                     projectId: projectId,
-                    userId: userId,
+                    userId: currentUserId,
                     IsChecked: false,
                 })
                 .then(async (todolist) => {
@@ -284,23 +297,23 @@ module.exports = {
     },
     todolistchange: async (req, res) => {
 
-        const { id, projectId, userId, IsChecked } = req.body;
+        //const { id, projectId, userId, IsChecked } = req.body;
+        const { id, IsChecked } = req.body;
 
         let currentTodolist = await todolist.findByPk(id)
 
-        if (projectId !== null) {
-            currentTodolist.projectId = projectId;
-        }
-        if (userId !== null) {
-            currentTodolist.userId = userId;
-        }
+        // if (projectId !== null) {  // project table에 id에 연결 되어 있음.  삭제 필요.
+        //     currentTodolist.projectId = projectId;
+        // }
+        // if (userId !== null) {
+        //     currentTodolist.userId = userId;
+        // }
         if (IsChecked !== null) {
             currentTodolist.IsChecked = IsChecked;
         }
 
         let result = await currentTodolist.save();
         res.status(202).json(result);
-
     },
     projectdelete: async (req, res) => { // 프로젝트 삭제시 프로젝트와 연관된 todolist도 같이 삭제 되어야 함,
 
@@ -311,7 +324,7 @@ module.exports = {
 
         let currentProject = await project.findOne({ where: { id: id } }) // project 삭제
         await currentProject.destroy();
-        res.status(202).json("project deleted");
+        res.status(202).json(`id:${id}`);
     },
     todolistdelete: async (req, res) => {  // toddlist는 list 한 개만 삭제 해야 함.
 
@@ -320,7 +333,6 @@ module.exports = {
 
         let currentTodolist = await todolist.findByPk(todolistId)
         await currentTodolist.destroy();
-        res.status(202).json("todolist deleted");
+        res.status(202).json(`id:${id}`);
     },
-
 }
