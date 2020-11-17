@@ -56,9 +56,9 @@ module.exports = {
     },
 
     projectinfo: async (req, res) => {
-        // if(!req.session.userid){
-        //     return res.status(401).send('need user session')
-        // }
+        if(!req.session.userid){
+            return res.status(401).send('need user session')
+        }
         if (req.query.day) {
             user
                 .findOne({
@@ -261,7 +261,7 @@ module.exports = {
     userchange: async (req, res) => {
 
         const { email, userName, password } = req.body;
-        let sessUserId = req.session.userid;
+        let sessUserId = 1;
 
         let userCurrent = await user.findByPk(sessUserId)
 
