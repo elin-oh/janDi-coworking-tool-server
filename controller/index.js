@@ -1,4 +1,5 @@
 const { user, project, todolist, users_projects, sequelize } = require('../models');
+const crypto = require('crypto');
 
 module.exports = {
     userinfo: async (req, res) => {
@@ -8,12 +9,12 @@ module.exports = {
         user
             .findOne({
                 where: { id: req.session.userid },
-                attributes: ['email','userName'],
+                attributes: ['email', 'userName'],
                 include: [{
                     model: todolist,
                     attributes: [
                         [sequelize.fn('COUNT', 'id'), 'todoTotalCount'],
-                        [sequelize.literal(`SUM(IsChecked)`),'todoDoneCount']
+                        [sequelize.literal(`SUM(IsChecked)`), 'todoDoneCount']
                     ],
                 }]
             })
@@ -55,13 +56,13 @@ module.exports = {
     },
 
     projectinfo: async (req, res) => {
-        if (!req.session.userid) {
-            return res.status(401).send('need user session')
-        }
+        // if (!req.session.userid) {
+        //     return res.status(401).send('need user session')
+        // }
         if (req.query.day) {
             user
                 .findOne({
-                    where: { id: req.session.userid },
+                    where: { id: 31 },
                     attributes: [],
                     include: {
                         model: project,
@@ -84,11 +85,10 @@ module.exports = {
         else {
             user
                 .findOne({
-                    where: { id: req.session.userid },
+                    where: { id: 2 },
                     include: {
                         model: project,
                         attributes: ['id', 'projectName', 'adminUserId'],
-                        right: true,
                         through: { attributes: [] },
                         include: {
                             model: todolist,
@@ -222,7 +222,7 @@ module.exports = {
     todolistpost: async (req, res) => {
 
         const { body, projectId, email } = req.body;
-        let currentUserId 
+        let currentUserId
 
         if (!body || !projectId) {
             res.status(422).send('insufficient parameters supplied');
@@ -258,23 +258,46 @@ module.exports = {
     },
     userchange: async (req, res) => {
 
-        const { email, userName, password } = req.body;
-        let sessUserId = req.session.userid;
+        const { userName, currentPassword, newPassword } = req.body;
+        let sessUserId = 11;
+        let result;
+        let hasingPassword;
 
         let userCurrent = await user.findByPk(sessUserId)
 
-        if (email !== null) {
-            userCurrent.email = email;
-        }
         if (userName !== null) {
             userCurrent.userName = userName;
         }
-        if (password !== null) {
-            userCurrent.password = password;
-        }
+        if (currentPassword == null || newPassword == null) {
 
-        let result = await userCurrent.save();
-        res.status(202).json(`id:${result.id}`);
+            res.status(422).send('insufficient parameters supplied');
+
+        } else {
+
+            var shasum = crypto.createHmac('sha512', 'jandikey');
+            shasum.update(currentPassword);
+            hasingPassword = shasum.digest('hex');
+
+            console.log(hasingPassword)
+            console.log(userCurrent.password)
+
+            if (hasingPassword === userCurrent.password) {
+
+                var shasum = crypto.createHmac('sha512', 'jandikey');
+                shasum.update(newPassword);
+                hasingPassword = shasum.digest('hex');
+
+                userCurrent.password = hasingPassword;
+
+                result = await userCurrent.save();
+                res.status(202).json(`id:${result.id}`);
+            }
+            else {
+                res.status(422).send('password not right');
+            }
+            // 서버에 저장된 해싱된 비밀번호랑 입력된 비밀번호가 같은 경우
+            // 맞으면, 새 패스워드를 데이터 베이스에 저장
+        }
     },
     projectchange: async (req, res) => {
 
