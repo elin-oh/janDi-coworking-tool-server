@@ -2,12 +2,12 @@ const { user, project, todolist, sequelize } = require('../models');
 
 module.exports = {  
   userinfo: async (req, res) => {
-    if(!req.session.userid){
-        return res.status(401).send('need user session')
-    }
+    // if(!1){
+    //     return res.status(401).send('need user session')
+    // }
     user
     .findOne({  
-      where: { id: req.session.userid },
+      where: { id: 1 },
       attributes: ['password'],
       include: [{
         model: todolist,
@@ -19,6 +19,7 @@ module.exports = {
       }]
     })
     .then(result => {
+        result['password'] = result.password.length
         res.status(200).json(result)  
     })
     .catch(err => {
@@ -27,16 +28,16 @@ module.exports = {
     
   },
   maininfo: async (req, res) => { 
-    if(!req.session.userid){
+    if(!1){
         return res.status(401).send('need user session')
     }
     user
-    .findOne({
-      where: { id: req.session.userid },
+    .findOne({         //유저 ?
+      where: { id: 1 },
       attributes: [],
       include: {
         model: project,
-        attributes: ['id', 'projectName'],
+        attributes: ['id', 'projectName','adminUserId'],
         through: {attributes: []},
         include: {
             model: todolist,
@@ -48,21 +49,21 @@ module.exports = {
       }
     })
     .then(result => {
-        res.status(200).json(result['projects'])
+        res.status(200).json(result.projects)
     })
     .catch(err => {
         res.status(500).send(err);
     });
   },
-
+  
   projectinfo: async (req, res) => { 
-    // if(!req.session.userid){
+    // if(!1){
     //     return res.status(401).send('need user session')
     // }
     if(req.query.day){
         user
         .findOne({
-          where: { id: req.session.userid },
+          where: { id: 1 },
           attributes: [],
           include: {
             model: project,
@@ -218,7 +219,7 @@ module.exports = {
     userchange: async (req, res) => {
 
         const { email, userName, password } = req.body;
-        let sessUserId = req.session.userid;
+        let sessUserId = 1;
 
         let userCurrent = await user.findByPk(1)
 
