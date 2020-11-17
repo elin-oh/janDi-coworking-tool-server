@@ -2,7 +2,6 @@
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-
     await queryInterface.createTable('users_projects', {
       id: {
         allowNull: false,
@@ -19,12 +18,8 @@ module.exports = {
         references: { model: 'users', key: 'id' }
       }
     });
-
   },
-
   down: async (queryInterface, Sequelize) => {
-
     await queryInterface.dropTable('users_projects');
-
   }
 };
