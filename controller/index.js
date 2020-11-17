@@ -88,7 +88,6 @@ module.exports = {
                     include: {
                         model: project,
                         attributes: ['id', 'projectName', 'adminUserId'],
-                        right: true,
                         through: { attributes: [] },
                         include: {
                             model: todolist,
