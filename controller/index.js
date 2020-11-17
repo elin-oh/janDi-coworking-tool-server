@@ -56,7 +56,7 @@ module.exports = {
     },
 
     projectinfo: async (req, res) => {
-        if(!req.session.userid){
+        if (!req.session.userid) {
             return res.status(401).send('need user session')
         }
         if (req.query.day) {
@@ -171,7 +171,7 @@ module.exports = {
                         return res.status(409).send('email exists');
                     }
                     const data = await user.get({ plain: true });
-                    res.status(201).json(data);
+                    res.status(201).json(`id:${data.id}`);
                 })
                 .catch(err => {
                     res.status(500).send(err);
@@ -183,9 +183,6 @@ module.exports = {
 
         const { projectName, member } = req.body;
         var sess = req.session;
-
-        let memberLength = member.length;
-
 
         if (!projectName) {
             res.status(422).send('insufficient parameters supplied');
@@ -203,15 +200,18 @@ module.exports = {
                     let currentEmail;
                     let memberuser;
 
-                    for (let i = 0; i < memberLength; i++) {
+                    if (member) {
 
-                        currentEmail = member[i];
-                        memberuser = await user.findOne({ where: { email: currentEmail } });
+                        for (let i = 0; i < member.length; i++) {
 
-                        users_projects.create({
-                            projectId: data.id,
-                            userId: memberuser.id
-                        })
+                            currentEmail = member[i];
+                            memberuser = await user.findOne({ where: { email: currentEmail } });
+
+                            users_projects.create({
+                                projectId: data.id,
+                                userId: memberuser.id
+                            })
+                        }
                     }
                     res.status(201).json(data);
                 })
@@ -237,7 +237,6 @@ module.exports = {
             else {
                 await user.findOne({ where: { email: email } })
                     .then((data) => {
-
                         currentUserId = data.id;
                     })
             }
@@ -254,14 +253,14 @@ module.exports = {
                     res.status(201).json(data);
                 })
                 .catch(err => {
-                    res.status(404).send(err);
+                    res.status(500).send(err);
                 });
         }
     },
     userchange: async (req, res) => {
 
         const { email, userName, password } = req.body;
-        let sessUserId = 1;
+        let sessUserId = req.session.userid;
 
         let userCurrent = await user.findByPk(sessUserId)
 
@@ -276,44 +275,46 @@ module.exports = {
         }
 
         let result = await userCurrent.save();
-        res.status(202).json(result);
+        res.status(202).json(`id:${result.id}`);
     },
     projectchange: async (req, res) => {
 
-        const { id, projectName, adminUserId } = req.body;
+        const { id, projectName, member } = req.body;
 
         let currentProject = await project.findByPk(id)
 
         if (projectName !== null) {
             currentProject.projectName = projectName;
         }
-        if (adminUserId !== null) {
-            currentProject.adminUserId = adminUserId;
+        if (member !== null) {
+
+            for (let i = 0; i < member.length; i++) {
+
+                currentEmail = member[i];
+                memberuser = await user.findOne({ where: { email: currentEmail } });
+
+                users_projects.create({
+                    projectId: id,
+                    userId: memberuser.id
+                })
+            }
         }
 
         let result = await currentProject.save();
         res.status(202).json(result);
-
     },
     todolistchange: async (req, res) => {
 
-        //const { id, projectId, userId, IsChecked } = req.body;
         const { id, IsChecked } = req.body;
 
         let currentTodolist = await todolist.findByPk(id)
 
-        // if (projectId !== null) {  // project table에 id에 연결 되어 있음.  삭제 필요.
-        //     currentTodolist.projectId = projectId;
-        // }
-        // if (userId !== null) {
-        //     currentTodolist.userId = userId;
-        // }
         if (IsChecked !== null) {
             currentTodolist.IsChecked = IsChecked;
         }
 
-        let result = await currentTodolist.save();
-        res.status(202).json(result);
+        await currentTodolist.save();
+        res.status(202).end();
     },
     projectdelete: async (req, res) => { // 프로젝트 삭제시 프로젝트와 연관된 todolist도 같이 삭제 되어야 함,
 
