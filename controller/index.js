@@ -63,7 +63,7 @@ module.exports = {
 
     projectinfo: async (req, res) => {
         let member = await project.findOne({
-            where: { id: req.session.userid },
+            where: { id: req.query.pid },
             attributes: [],
             include: {
                 model: user,
@@ -210,6 +210,11 @@ module.exports = {
                     const data = await project.get({ plain: true });
                     let currentEmail;
                     let memberuser;
+
+                    users_projects.create({
+                        projectId: data.id,
+                        userId: sess.userid
+                    })
 
                     if (member) {
 
