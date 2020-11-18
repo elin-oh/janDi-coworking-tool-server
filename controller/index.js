@@ -358,4 +358,26 @@ module.exports = {
         await currentTodolist.destroy();
         res.status(202).json(`id:${id}`);
     },
+    usercheck: async (req, res) => {
+
+        const { id } = req.body;
+        let userId = id;
+
+        let usercheck = await user.findByPk(userId)
+            .catch(err => {
+                res.status(500).send(err);
+            });
+
+        console.log(usercheck === null)
+
+        if (usercheck !== null) {
+
+            res.status(200).json(`isUser:${true}`);
+        }
+        else if (usercheck === null) {
+
+            res.status(200).json(`isUser:${false}`);
+        }
+
+    },
 }
