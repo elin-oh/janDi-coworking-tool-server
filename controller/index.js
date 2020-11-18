@@ -271,7 +271,7 @@ module.exports = {
     userchange: async (req, res) => {
 
         const { userName, currentPassword, newPassword } = req.body;
-        let sessUserId = req.session.userid
+        let sessUserId = req.session.userid;
         let result;
         let hasingPassword;
 
@@ -366,5 +366,25 @@ module.exports = {
         let currentTodolist = await todolist.findByPk(todolistId)
         await currentTodolist.destroy();
         res.status(202).json(`id:${id}`);
+    },
+    usercheck: async (req, res) => {
+
+        const { id } = req.body;
+        let userId = id;
+
+        let usercheck = await user.findByPk(userId)
+            .catch(err => {
+                res.status(500).send(err);
+            });
+
+        if (usercheck !== null) {
+
+            res.status(200).json(`isUser:${true}`);
+        }
+        else if (usercheck === null) {
+
+            res.status(200).json(`isUser:${false}`);
+        }
+
     },
 }
