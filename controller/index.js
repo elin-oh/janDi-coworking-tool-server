@@ -62,30 +62,6 @@ module.exports = {
     },
 
     projectinfo: async (req, res) => {
-<<<<<<< HEAD
-        if (!req.session.userid) {
-            return res.status(401).send('need user session')
-        }
-        if (req.query.day) {
-            let idArr = []
-            let memberArr = []
-            await users_projects.findAll({
-                where:{ projectId:req.query.pid }
-            })
-            .then(result => {
-                for(let i = 0; i< result.length; i++){
-                    idArr.push(result[i].userId)
-                }
-            })
-
-            for(let i = 0; i < idArr.length; i++){
-                await user.findByPk(idArr[i])
-                .then((member)=>{memberArr.push(member.userName)})
-            }
-            
-            project.findOne({
-                where:{id:req.session.userid},
-=======
         let member = await project.findOne({
             where:{id:req.session.userid},
             attributes:[],
@@ -105,39 +81,9 @@ module.exports = {
         if(req.query.day){
             prtodo = await project.findOne({
                 where:{ id:req.query.pid },
->>>>>>> 2f154f422bb29300119a90e91f399c0f6f9517ab
                 attributes:['adminUserId'],
                 include:{
                     model: todolist,
-<<<<<<< HEAD
-                    where:{ createdAt: req.query.day },
-                    attributes:['id','body','IsChecked']
-                }
-            })
-            .then(result => {
-                result['member'] = memberArr
-                res.status(200).send(result)
-            })
-        }
-        else {
-            let idArr = []
-            let memberArr = []
-            await users_projects.findAll({
-                where:{ projectId: req.query.pid }
-            })
-            .then(result => {
-                for(let i = 0; i< result.length; i++){
-                    idArr.push(result[i].userId)
-                }
-            })
-
-            for(let i = 0; i < idArr.length; i++){
-                await user.findByPk(idArr[i])
-                .then((member)=>{memberArr.push(member.userName)})
-            }
-            
-            project.findOne({
-=======
                     where:{createdAt:req.query.day},
                     attributes:['id','body','IsChecked'],
                 }
@@ -145,7 +91,6 @@ module.exports = {
         }
         else{
             prtodo = await project.findOne({
->>>>>>> 2f154f422bb29300119a90e91f399c0f6f9517ab
                 where:{ id:req.query.pid },
                 attributes:['adminUserId'],
                 include:{
@@ -325,23 +270,43 @@ module.exports = {
     },
     userchange: async (req, res) => {
 
-        const { email, userName, password } = req.body;
-        let sessUserId = req.session.userid;
+        const { userName, currentPassword, newPassword } = req.body;
+        let sessUserId = req.session.userid
+        let result;
+        let hasingPassword;
 
-        let userCurrent = await user.findByPk(1)
+        let userCurrent = await user.findByPk(sessUserId)
 
-        if (email !== null) {
-            userCurrent.email = email;
-        }
         if (userName !== null) {
             userCurrent.userName = userName;
         }
-        if (password !== null) {
-            userCurrent.password = password;
-        }
+        if (currentPassword == null || newPassword == null) {
 
-        let result = await userCurrent.save();
-        res.status(202).json(`id:${result.id}`);
+            res.status(422).send('insufficient parameters supplied');
+
+        } else {
+
+            var shasum = crypto.createHmac('sha512', 'jandikey');
+            shasum.update(currentPassword);
+            hasingPassword = shasum.digest('hex');
+
+            if (hasingPassword === userCurrent.password) {
+
+                var shasum = crypto.createHmac('sha512', 'jandikey');
+                shasum.update(newPassword);
+                hasingPassword = shasum.digest('hex');
+
+                userCurrent.password = hasingPassword;
+
+                result = await userCurrent.save();
+                res.status(202).json(`id:${result.id}`);
+            }
+            else {
+                res.status(422).send('password not right');
+            }
+            // 서버에 저장된 해싱된 비밀번호랑 입력된 비밀번호가 같은 경우
+            // 맞으면, 새 패스워드를 데이터 베이스에 저장
+        }
     },
     projectchange: async (req, res) => {
 
