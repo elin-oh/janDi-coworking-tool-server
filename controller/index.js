@@ -47,82 +47,69 @@ module.exports = {
                 }
             })
             .then(result => {
-                res.status(200).json(result['projects'])
-            })
+                let projectResult = result.projects.map(item => item.dataValues);
+                projectResult.forEach(item => {
+                  item.todolists = item.todolists.reduce((a, c) => {
+                    a[c.dataValues.createdAt] = c.dataValues.COUNT;
+                    return a;
+                  }, {})
+                })
+                res.status(200).json(projectResult)
+              })
             .catch(err => {
                 res.status(500).send(err);
             });
     },
 
     projectinfo: async (req, res) => {
-        // if (!req.session.userid) {
-        //     return res.status(401).send('need user session')
-        // }
-        if (req.query.day) {
-            let idArr = []
-            let memberArr = []
-            await users_projects.findAll({
-                where:{projectId:1}
-            })
-            .then(result => {
-                for(let i = 0; i< result.length; i++){
-                    idArr.push(result[i].userId)
-                }
-            })
-
-            for(let i = 0; i < idArr.length; i++){
-                await user.findByPk(idArr[i])
-                .then((member)=>{memberArr.push(member.userName)})
+        let member = await project.findOne({
+            where:{id:1},
+            attributes:[],
+            include:{
+                model:user,
+                attributes:['email'],
+                through:{attributes:[]}
             }
-            
-            project.findOne({
-                where:{id:1},
-                attributes:['adminUserId'],
-                raw:true,
-                include:{
-                    model: todolist,
-                    attributes:['id','body','IsChecked']
-                }
-            })
-            .then(result => {
-                console.log('result     :'+result)
-                console.log("member    :"+memberArr)
-                result['member'] = memberArr
-                res.status(200).send(result)
-            })
-        }
-        else {
-            let idArr = []
-            let memberArr = []
-            await users_projects.findAll({
-                where:{ projectId:1 }
-            })
-            .then(result => {
-                for(let i = 0; i< result.length; i++){
-                    idArr.push(result[i].userId)
-                }
-            })
+        })
 
-            for(let i = 0; i < idArr.length; i++){
-                await user.findByPk(idArr[i])
-                .then((member)=>{memberArr.push(member.userName)})
-            }
-            
-            project.findOne({
+        let prtodo
+        let obj = {}
+        let memberEmail = []
+        member.users.forEach(ele => memberEmail.push(ele.email))
+        obj['member'] = memberEmail
+
+        if(req.query.day){
+            prtodo = await project.findOne({
                 where:{ id:1 },
                 attributes:['adminUserId'],
-                raw:true,
                 include:{
                     model: todolist,
-                    attributes:['id','body','IsChecked']
+                    where:{createdAt:req.query.day},
+                    attributes:['id','body','IsChecked'],
                 }
             })
-            .then(result => {
-                result['member'] = memberArr
-                res.status(200).send(result)
-            })
-
         }
+        else{
+            prtodo = await project.findOne({
+                where:{ id:1 },
+                attributes:['adminUserId'],
+                include:{
+                    model: todolist,
+                    attributes:['id','body','IsChecked'],
+                }
+            })
+        }
+
+        obj['project'] = prtodo
+
+        obj.project.adminUserId === req.session.userid
+        ?obj.project.adminUserId = true
+        :obj.project.adminUserId = false
+        
+        res.send(obj)
+        
+
+
     }, 
 
     login: async (req, res) => {
@@ -151,6 +138,7 @@ module.exports = {
                 }
             })
             .catch(err => {
+                console.log(err)
                 res.status(500).send(err);
             });
 
@@ -285,7 +273,7 @@ module.exports = {
         const { email, userName, password } = req.body;
         let sessUserId = req.session.userid;
 
-        let userCurrent = await user.findByPk(sessUserId)
+        let userCurrent = await user.findByPk(1)
 
         if (email !== null) {
             userCurrent.email = email;
