@@ -86,6 +86,10 @@ module.exports = {
                     model: todolist,
                     where: { createdAt: req.query.day },
                     attributes: ['id', 'body', 'IsChecked'],
+                    include:{
+                        model:user,
+                        attributes:['userName']
+                    }
                 }
             })
         }
@@ -96,6 +100,10 @@ module.exports = {
                 include: {
                     model: todolist,
                     attributes: ['id', 'body', 'IsChecked'],
+                    include:{
+                        model:user,
+                        attributes:['userName']
+                    }
                 }
             })
         }
