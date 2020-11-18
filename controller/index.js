@@ -2,12 +2,12 @@ const { user, project, todolist, users_projects, sequelize } = require('../model
 
 module.exports = {
     userinfo: async (req, res) => {
-        // if (!req.session.userid) {
-        //     return res.status(401).send('need user session')
-        // }
+        if (!req.session.userid) {
+            return res.status(401).send('need user session')
+        }
         user
             .findOne({
-                where: { id: 1 },
+                where: { id: req.session.userid },
                 attributes: ['email', 'userName'],
                 include: [{
                     model: todolist,
@@ -26,12 +26,12 @@ module.exports = {
 
     },
     maininfo: async (req, res) => {
-        // if (!req.session.userid) {
-        //     return res.status(401).send('need user session')
-        // }
+        if (!req.session.userid) {
+            return res.status(401).send('need user session')
+        }
         user
             .findOne({
-                where: { id: 1 },
+                where: { id: req.session.userid },
                 attributes: [],
                 include: {
                     model: project,
@@ -63,7 +63,7 @@ module.exports = {
 
     projectinfo: async (req, res) => {
         let member = await project.findOne({
-            where:{id:1},
+            where:{id:req.session.userid},
             attributes:[],
             include:{
                 model:user,
@@ -80,7 +80,7 @@ module.exports = {
 
         if(req.query.day){
             prtodo = await project.findOne({
-                where:{ id:1 },
+                where:{ id:req.query.pid },
                 attributes:['adminUserId'],
                 include:{
                     model: todolist,
@@ -91,7 +91,7 @@ module.exports = {
         }
         else{
             prtodo = await project.findOne({
-                where:{ id:1 },
+                where:{ id:req.query.pid },
                 attributes:['adminUserId'],
                 include:{
                     model: todolist,
