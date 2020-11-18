@@ -49,13 +49,13 @@ module.exports = {
             .then(result => {
                 let projectResult = result.projects.map(item => item.dataValues);
                 projectResult.forEach(item => {
-                  item.todolists = item.todolists.reduce((a, c) => {
-                    a[c.dataValues.createdAt] = c.dataValues.COUNT;
-                    return a;
-                  }, {})
+                    item.todolists = item.todolists.reduce((a, c) => {
+                        a[c.dataValues.createdAt] = c.dataValues.COUNT;
+                        return a;
+                    }, {})
                 })
                 res.status(200).json(projectResult)
-              })
+            })
             .catch(err => {
                 res.status(500).send(err);
             });
@@ -63,12 +63,12 @@ module.exports = {
 
     projectinfo: async (req, res) => {
         let member = await project.findOne({
-            where:{id:req.session.userid},
-            attributes:[],
-            include:{
-                model:user,
-                attributes:['email'],
-                through:{attributes:[]}
+            where: { id: req.session.userid },
+            attributes: [],
+            include: {
+                model: user,
+                attributes: ['email'],
+                through: { attributes: [] }
             }
         })
 
@@ -78,24 +78,24 @@ module.exports = {
         member.users.forEach(ele => memberEmail.push(ele.email))
         obj['member'] = memberEmail
 
-        if(req.query.day){
+        if (req.query.day) {
             prtodo = await project.findOne({
-                where:{ id:req.query.pid },
-                attributes:['adminUserId'],
-                include:{
+                where: { id: req.query.pid },
+                attributes: ['adminUserId'],
+                include: {
                     model: todolist,
-                    where:{createdAt:req.query.day},
-                    attributes:['id','body','IsChecked'],
+                    where: { createdAt: req.query.day },
+                    attributes: ['id', 'body', 'IsChecked'],
                 }
             })
         }
-        else{
+        else {
             prtodo = await project.findOne({
-                where:{ id:req.query.pid },
-                attributes:['adminUserId'],
-                include:{
+                where: { id: req.query.pid },
+                attributes: ['adminUserId'],
+                include: {
                     model: todolist,
-                    attributes:['id','body','IsChecked'],
+                    attributes: ['id', 'body', 'IsChecked'],
                 }
             })
         }
@@ -103,14 +103,14 @@ module.exports = {
         obj['project'] = prtodo
 
         obj.project.adminUserId === req.session.userid
-        ?obj.project.adminUserId = true
-        :obj.project.adminUserId = false
-        
+            ? obj.project.adminUserId = true
+            : obj.project.adminUserId = false
+
         res.send(obj)
-        
 
 
-    }, 
+
+    },
 
     login: async (req, res) => {
         const { email, password } = req.body;
@@ -369,8 +369,10 @@ module.exports = {
     },
     usercheck: async (req, res) => {
 
-        const { id } = req.body;
-        let userId = id;
+        const { email } = req.body;
+
+        let memberuser = await user.findOne({ where: { email: email } });
+        let userId = memberuser.id;
 
         let usercheck = await user.findByPk(userId)
             .catch(err => {
