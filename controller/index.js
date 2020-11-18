@@ -56,13 +56,13 @@ module.exports = {
     },
 
     projectinfo: async (req, res) => {
-        // if (!req.session.userid) {
-        //     return res.status(401).send('need user session')
-        // }
+        if (!req.session.userid) {
+            return res.status(401).send('need user session')
+        }
         if (req.query.day) {
             user
                 .findOne({
-                    where: { id: 31 },
+                    where: { id: req.session.userid },
                     attributes: [],
                     include: {
                         model: project,
@@ -85,7 +85,7 @@ module.exports = {
         else {
             user
                 .findOne({
-                    where: { id: 2 },
+                    where: { id: req.session.userid },
                     include: {
                         model: project,
                         attributes: ['id', 'projectName', 'adminUserId'],
@@ -259,7 +259,7 @@ module.exports = {
     userchange: async (req, res) => {
 
         const { userName, currentPassword, newPassword } = req.body;
-        let sessUserId = 11;
+        let sessUserId = req.session.userid;
         let result;
         let hasingPassword;
 
@@ -367,8 +367,6 @@ module.exports = {
             .catch(err => {
                 res.status(500).send(err);
             });
-
-        console.log(usercheck === null)
 
         if (usercheck !== null) {
 
