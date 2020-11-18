@@ -19,8 +19,8 @@ app.use(express.json());
 
 app.use(
   cors({
-    origin: ['http://localhost:3000'],
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    origin: ['http://jandi-client.s3-website.ap-northeast-2.amazonaws.com:3000'],
+    methods: ['*'],
     credentials: true
   })
 );

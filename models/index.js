@@ -34,8 +34,6 @@ Object.keys(db).forEach(modelName => {
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
 
-// Assorciation 설정 Sprint2 Day1
-
 const { user, project, todolist } = sequelize.models;
 
 user.hasMany(todolist, { foreignKey: 'userId' });
@@ -45,5 +43,6 @@ project.hasMany(todolist, { foreignKey: 'projectId', onDelete: 'cascade' });
 todolist.belongsTo(project);
 
 user.belongsToMany(project, { through: 'users_projects' })
+project.belongsToMany(user, { through: 'users_projects' })
 
 module.exports = db;

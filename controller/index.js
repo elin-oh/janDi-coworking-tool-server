@@ -1,5 +1,4 @@
 const { user, project, todolist, users_projects, sequelize } = require('../models');
-const crypto = require('crypto');
 
 module.exports = {
     userinfo: async (req, res) => {
@@ -48,83 +47,70 @@ module.exports = {
                 }
             })
             .then(result => {
-                res.status(200).json(result['projects'])
-            })
+                let projectResult = result.projects.map(item => item.dataValues);
+                projectResult.forEach(item => {
+                  item.todolists = item.todolists.reduce((a, c) => {
+                    a[c.dataValues.createdAt] = c.dataValues.COUNT;
+                    return a;
+                  }, {})
+                })
+                res.status(200).json(projectResult)
+              })
             .catch(err => {
                 res.status(500).send(err);
             });
     },
 
     projectinfo: async (req, res) => {
-        if (!req.session.userid) {
-            return res.status(401).send('need user session')
-        }
-        if (req.query.day) {
-
-            let idArr = []
-            let memberArr = []
-            await users_projects.findAll({
-                where:{ projectId:req.query.pid }
-            })
-            .then(result => {
-                for(let i = 0; i< result.length; i++){
-                    idArr.push(result[i].userId)
-                }
-            })
-
-            for(let i = 0; i < idArr.length; i++){
-                await user.findByPk(idArr[i])
-                .then((member)=>{memberArr.push(member.userName)})
+        let member = await project.findOne({
+            where:{id:req.session.userid},
+            attributes:[],
+            include:{
+                model:user,
+                attributes:['email'],
+                through:{attributes:[]}
             }
-            
-            project.findOne({
-                where:{id:req.session.userid},
-                attributes:['adminUserId'],
-                raw:true,
-                include:{
-                    model: todolist,
-                    where:{ createdAt: req.query.day },
-                    attributes:['id','body','IsChecked']
-                }
-            })
-            .then(result => {
-                result['member'] = memberArr
-                res.status(200).send(result)
-            })
-        }
-        else {
-            let idArr = []
-            let memberArr = []
-            await users_projects.findAll({
-                where:{ projectId: req.query.pid }
-            })
-            .then(result => {
-                for(let i = 0; i< result.length; i++){
-                    idArr.push(result[i].userId)
-                }
-            })
+        })
 
-            for(let i = 0; i < idArr.length; i++){
-                await user.findByPk(idArr[i])
-                .then((member)=>{memberArr.push(member.userName)})
-            }
-            
-            project.findOne({
+        let prtodo
+        let obj = {}
+        let memberEmail = []
+        member.users.forEach(ele => memberEmail.push(ele.email))
+        obj['member'] = memberEmail
+
+        if(req.query.day){
+            prtodo = await project.findOne({
                 where:{ id:req.query.pid },
                 attributes:['adminUserId'],
-                raw:true,
                 include:{
                     model: todolist,
-                    attributes:['id','body','IsChecked']
+                    where:{createdAt:req.query.day},
+                    attributes:['id','body','IsChecked'],
                 }
             })
-            .then(result => {
-                result['member'] = memberArr
-                res.status(200).send(result)
-            })
-
         }
-    },
+        else{
+            prtodo = await project.findOne({
+                where:{ id:req.query.pid },
+                attributes:['adminUserId'],
+                include:{
+                    model: todolist,
+                    attributes:['id','body','IsChecked'],
+                }
+            })
+        }
+
+        obj['project'] = prtodo
+
+        obj.project.adminUserId === req.session.userid
+        ?obj.project.adminUserId = true
+        :obj.project.adminUserId = false
+        
+        res.send(obj)
+        
+
+
+    }, 
 
     login: async (req, res) => {
         const { email, password } = req.body;
@@ -152,6 +138,7 @@ module.exports = {
                 }
             })
             .catch(err => {
+                console.log(err)
                 res.status(500).send(err);
             });
 
@@ -302,9 +289,6 @@ module.exports = {
             var shasum = crypto.createHmac('sha512', 'jandikey');
             shasum.update(currentPassword);
             hasingPassword = shasum.digest('hex');
-
-            console.log(hasingPassword)
-            console.log(userCurrent.password)
 
             if (hasingPassword === userCurrent.password) {
 
