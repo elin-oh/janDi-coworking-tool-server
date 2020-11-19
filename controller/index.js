@@ -107,7 +107,12 @@ module.exports = {
                 }
             })
         }
-
+        if(!prtodo){
+            prtodo = await project.findOne({
+                where:{id:req.query.pid},
+                attributes:['adminUserId']
+            })
+        }
         obj['project'] = prtodo
 
         obj.project.adminUserId === req.session.userid
