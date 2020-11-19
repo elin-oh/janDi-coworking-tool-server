@@ -19,12 +19,12 @@ app.use(express.json());
 
 app.use(
   cors({
-    origin: ['http://jandi-client.s3-website.ap-northeast-2.amazonaws.com:3000'],
+    origin: ['http://jandi-client.s3-website.ap-northeast-2.amazonaws.com:3000','http://localhost:3001'],
     methods: ['GET,POST,PUT,DELETE'],
     credentials: true
   })
 );
-
+app.options('*', cors()) 
 app.use('/', indexRouter);
 app.listen(3000)
 
