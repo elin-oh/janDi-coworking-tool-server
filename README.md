@@ -1,14 +1,34 @@
-# im12-server
-# 
+![](https://img.shields.io/badge/PROJECT-JANDI--COWORKING--TOOL-blue?style=for-the-badge) 
+![](https://img.shields.io/badge/JANDI--COWORKING--TOOL-WEB-yellowgreen?style=for-the-badge)
+# 🌱JanDi-Cowrking-tool
 
-# 11월 11일 Sprint2 Day1
-# DB 설정
-# 1. sequelize를 이용하여 모델 생성
-# 2. My SQL 과 연동
-# 3. Association 구현
 
-# - 작업 내용 
-# 데이터 베이스 이름 생성 : JANDI
-# Sequalize, migration 설치 및 생성
-# Association 설정 -> sequelize 를 통해 생성 방법? -> user_project 모델을 생성 후 관계 설정을 해줘야 함. migration을 통해 확인.
-#                                                 -> 임의로 모델 생성을 하면 안됨.  users_projects table은 migration을 통해 생성
+# 🕵🏼어떤 기술이 사용되었나요? 
+## FRONT
+![](https://img.shields.io/badge/FRONT-JAVASCRIPT-yellow?style=for-the-badge&logo=javascript) 
+
+![](https://img.shields.io/badge/FRONT-REACT-blue?style=for-the-badge&logo=react) 
+
+![](https://img.shields.io/badge/FRONT-REDUX-purple?style=for-the-badge&logo=redux) 
+
+## BACK
+![](https://img.shields.io/badge/BACK-NODE-green?style=for-the-badge&logo=node.js) 
+
+![](https://img.shields.io/badge/BACK-EXPRESS-black?style=for-the-badge&logo=express) 
+
+![](https://img.shields.io/badge/BACK-AWS-orange?style=for-the-badge&logo=Amazon-AWS) 
+
+# 🔨Architecture
+### Client-Side flow chart
+### Server-Side flow chart
+
+# 🗣️우리를 소개합니다.
+|  김건   | Backend  |
+| :---  |      ---: |
+| 이광섭  | Frontend  |
+| :---  |      ---: |
+| 오지영  | Frontend  |
+| :---  |      ---: |
+| 임민주  | Backend  |
+# For project details
+### [checkout WIKI](https://github.com/codestates/janDi-coworking-tool-server/wiki)
