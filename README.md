@@ -24,11 +24,9 @@
 
 # 🗣️우리를 소개합니다.
 |  김건   | Backend  |
-| :---  |      ---: |
-| 이광섭  | Frontend  |
-| :---  |      ---: |
-| 오지영  | Frontend  |
-| :---  |      ---: |
-| 임민주  | Backend  |
+| :---  | ---: |
+| 이광섭   | Frontend  |
+| 오지영   | Frontend  |
+| 임민주   | Backend  |
 # For project details
 ### [checkout WIKI](https://github.com/codestates/janDi-coworking-tool-server/wiki)
