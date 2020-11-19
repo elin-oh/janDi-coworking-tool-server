@@ -24,17 +24,12 @@ app.use(express.json());
 
 app.use(
   cors({
-    origin: [
-      'http://jandi-client.s3-website.ap-northeast-2.amazonaws.com:3000',
-      'http://localhost:3000', 'https://localhost:3000'
-    ],
-    methods: ['*'],
+    origin: ['http://jandi-client.s3-website.ap-northeast-2.amazonaws.com'],
+    methods: ['GET,POST,PUT,DELETE'],
     credentials: true
   })
 );
-var httpServer = http.createServer(app);
-var httpsServer = https.createServer(credentials, app);
-
+app.options('*', cors())
 app.use('/', indexRouter);
 // httpServer.listen(4000);
 // httpsServer.listen(3000);
