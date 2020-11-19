@@ -211,6 +211,9 @@ module.exports = {
         if (!projectName) {
             res.status(422).send('insufficient parameters supplied');
         }
+        else if (!sess.id) {
+            res.status(422).send('you are not login');
+        }
         else {
 
             project
@@ -388,23 +391,16 @@ module.exports = {
     usercheck: async (req, res) => {
 
         const { email } = req.body;
-
         let memberuser = await user.findOne({ where: { email: email } });
-        let userId = memberuser.id;
-
-        let usercheck = await user.findByPk(userId)
-            .catch(err => {
-                res.status(500).send(err);
-            });
-
-        if (usercheck !== null) {
-
-            res.status(200).json(`isUser:${true}`);
+        let userId = memberuser && memberuser.id;
+        if (userId) {
+            let usercheck = await user.findByPk(userId)
+                .catch(err => {
+                    res.status(500).send(err);
+                });
+            res.status(200).json({ isUser: true });
+        } else {
+            res.status(200).json({ isUser: false });
         }
-        else if (usercheck === null) {
-
-            res.status(200).json(`isUser:${false}`);
-        }
-
     },
 }
