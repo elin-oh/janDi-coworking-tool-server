@@ -5,10 +5,10 @@ const session = require('express-session')
 const fs = require('fs')
 var http = require('http');
 var https = require('https');
-var certificate = fs.readFileSync('ssl/mykey.pem', 'utf8')
-var privateKey = fs.readFileSync('ssl/mykey-key.pem', 'utf8')
+// var certificate = fs.readFileSync('ssl/mykey.pem', 'utf8')
+// var privateKey = fs.readFileSync('ssl/mykey-key.pem', 'utf8')
 const indexRouter = require('./routers/index');
-var credentials = { privateKey: privateKey, cert: certificate };
+// var credentials = { privateKey: privateKey, cert: certificate };
 
 app.use(express.json());
 
