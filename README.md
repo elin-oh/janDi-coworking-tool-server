@@ -31,7 +31,7 @@
 # 🗣️우리를 소개합니다.
 <table>
   <tr>
-    <td style="cursor:pointer;" onClick = "location.href='http://ihouse.so.vc'">김건</td>
+    <td>김건</td>
     <td>Backend</td>
   </tr>
   <tr>

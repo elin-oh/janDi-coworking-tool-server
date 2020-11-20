@@ -33,6 +33,6 @@ app.options('*', cors())
 app.use('/', indexRouter);
 // httpServer.listen(4000);
 // httpsServer.listen(3000);
-httpsServer.listen(3000)
+app.listen(3000)
 
 module.exports = app;
