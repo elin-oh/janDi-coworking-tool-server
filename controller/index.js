@@ -31,47 +31,52 @@ module.exports = {
             return res.status(401).send('need user session')
         }
         let prId = await user.findOne({
-            where: { id: req.session.userid },
-            attributes: [],
-            include: {
-                model: project,
-                attributes: ['id'],
-                through: { attributes: [] }
+            where:{id:req.session.userid},
+            attributes:[],
+            include:{
+                model:project,
+                attributes:['id'],
+                through:{attributes:[]}
             }
         })
-        let prList = prId.projects.map(ele => ele.id)
+        let prList = prId.projects.map(ele=>ele.id)
         let result = await Promise.all(
             prList.map(prID =>
                 user
-                    .findOne({
-                        where: { id: 1 },
-                        attributes: [],
+                .findOne({
+                    where: { id: req.session.userid },
+                    attributes: [],
+                    include: {
+                        model: project,
+                        where:{ id: prID },
+                        attributes: ['id', 'projectName'],
+                        through: { attributes: [] },
                         include: {
-                            model: project,
-                            where: { id: prID },
-                            attributes: ['id', 'projectName'],
-                            through: { attributes: [] },
-                            include: {
-                                model: todolist,
-                                attributes: ['createdAt', [sequelize.fn('COUNT', 'createdAt'), 'COUNT']],
-                                group: ['createdAt'],
-                                order: ['createdAt'],
-                                separate: true
-                            },
-                        }
-                    })
-                    .then(reArr => reArr.projects[0])
+                            model: todolist,
+                            attributes: ['createdAt', [sequelize.fn('COUNT', 'createdAt'), 'COUNT']],
+                            group: ['createdAt'],
+                            order: ['createdAt'],
+                            separate:true
+                        },
+                    }
+                })
             )
         )
-        let projectResult = result.map(item => item.dataValues);
-
-        projectResult.forEach(item => {
-            item.todolists = item.todolists.reduce((a, c) => {
-                a[c.dataValues.createdAt] = c.dataValues.COUNT;
-                return a;
-            }, {})
-        })
-        res.status(200).send(result)
+        if(result){
+            let projectResult = result.map(item => item.projects[0]);
+            projectResult.forEach(item => {
+                if(item.todolists.length!==0){
+                    item.todolists[0].dataValues = item.todolists.reduce((a, c) => {
+                        a[c.dataValues.createdAt] = c.dataValues.COUNT;
+                        return a;
+                    }, {})
+                }
+            })
+        res.status(200).send(projectResult)
+        }
+        else{
+            res.status(200).send([])
+        }
     },
 
     projectinfo: async (req, res) => {
