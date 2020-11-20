@@ -1,4 +1,5 @@
 const { user, project, todolist, users_projects, sequelize } = require('../models');
+const crypto = require('crypto');
 
 module.exports = {
     userinfo: async (req, res) => {
@@ -30,46 +31,46 @@ module.exports = {
             return res.status(401).send('need user session')
         }
         let prId = await user.findOne({
-            where:{id:req.session.userid},
-            attributes:[],
-            include:{
-                model:project,
-                attributes:['id'],
-                through:{attributes:[]}
+            where: { id: req.session.userid },
+            attributes: [],
+            include: {
+                model: project,
+                attributes: ['id'],
+                through: { attributes: [] }
             }
         })
-        let prList = prId.projects.map(ele=>ele.id)
+        let prList = prId.projects.map(ele => ele.id)
         let result = await Promise.all(
             prList.map(prID =>
                 user
-                .findOne({
-                    where: { id: 1 },
-                    attributes: [],
-                    include: {
-                        model: project,
-                        where:{ id: prID },
-                        attributes: ['id', 'projectName'],
-                        through: { attributes: [] },
+                    .findOne({
+                        where: { id: 1 },
+                        attributes: [],
                         include: {
-                            model: todolist,
-                            attributes: ['createdAt', [sequelize.fn('COUNT', 'createdAt'), 'COUNT']],
-                            group: ['createdAt'],
-                            order: ['createdAt'],
-                            separate:true
-                        },
-                    }
-                })     
-                .then(reArr=>reArr.projects[0])
-                )
+                            model: project,
+                            where: { id: prID },
+                            attributes: ['id', 'projectName'],
+                            through: { attributes: [] },
+                            include: {
+                                model: todolist,
+                                attributes: ['createdAt', [sequelize.fn('COUNT', 'createdAt'), 'COUNT']],
+                                group: ['createdAt'],
+                                order: ['createdAt'],
+                                separate: true
+                            },
+                        }
+                    })
+                    .then(reArr => reArr.projects[0])
+            )
         )
         let projectResult = result.map(item => item.dataValues);
 
-            projectResult.forEach(item => {
-                item.todolists = item.todolists.reduce((a, c) => {
-                    a[c.dataValues.createdAt] = c.dataValues.COUNT;
-                    return a;
-                }, {})
-            })
+        projectResult.forEach(item => {
+            item.todolists = item.todolists.reduce((a, c) => {
+                a[c.dataValues.createdAt] = c.dataValues.COUNT;
+                return a;
+            }, {})
+        })
         res.status(200).send(result)
     },
 
@@ -98,9 +99,9 @@ module.exports = {
                     model: todolist,
                     where: { createdAt: req.query.day },
                     attributes: ['id', 'body', 'IsChecked'],
-                    include:{
-                        model:user,
-                        attributes:['userName']
+                    include: {
+                        model: user,
+                        attributes: ['userName']
                     }
                 }
             })
@@ -112,17 +113,17 @@ module.exports = {
                 include: {
                     model: todolist,
                     attributes: ['id', 'body', 'IsChecked'],
-                    include:{
-                        model:user,
-                        attributes:['userName']
+                    include: {
+                        model: user,
+                        attributes: ['userName']
                     }
                 }
             })
         }
-        if(!prtodo){
+        if (!prtodo) {
             prtodo = await project.findOne({
-                where:{id:req.query.pid},
-                attributes:['adminUserId']
+                where: { id: req.query.pid },
+                attributes: ['adminUserId']
             })
         }
         obj['project'] = prtodo
@@ -302,40 +303,36 @@ module.exports = {
         }
     },
     userchange: async (req, res) => {
-
         const { userName, currentPassword, newPassword } = req.body;
+
         let sessUserId = req.session.userid;
         let result;
         let hasingPassword;
-
         let userCurrent = await user.findByPk(sessUserId)
 
-        if (userName !== null) {
+        if (userName !== undefined) {
             userCurrent.userName = userName;
+            result = await userCurrent.save();
+            res.status(202).json(`id:${result.id}`);
         }
-        if (currentPassword == null || newPassword == null) {
-
-            res.status(422).send('insufficient parameters supplied');
-
-        } else {
+        if (currentPassword !== null) {
 
             var shasum = crypto.createHmac('sha512', 'jandikey');
             shasum.update(currentPassword);
             hasingPassword = shasum.digest('hex');
 
-            if (hasingPassword === userCurrent.password) {
-
-                var shasum = crypto.createHmac('sha512', 'jandikey');
-                shasum.update(newPassword);
-                hasingPassword = shasum.digest('hex');
-
-                userCurrent.password = hasingPassword;
-
-                result = await userCurrent.save();
-                res.status(202).json(`id:${result.id}`);
-            }
-            else {
-                res.status(422).send('password not right');
+            if (newPassword !== null) {
+                if (hasingPassword === userCurrent.password) {
+                    var shasum = crypto.createHmac('sha512', 'jandikey');
+                    shasum.update(newPassword);
+                    hasingPassword = shasum.digest('hex');
+                    userCurrent.password = hasingPassword;
+                    result = await userCurrent.save();
+                    res.status(202).json(`id:${result.id}`);
+                }
+                else {
+                    res.status(422).send('password not right');
+                }
             }
             // 서버에 저장된 해싱된 비밀번호랑 입력된 비밀번호가 같은 경우
             // 맞으면, 새 패스워드를 데이터 베이스에 저장
