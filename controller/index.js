@@ -81,67 +81,62 @@ module.exports = {
 
     projectinfo: async (req, res) => {
         let member = await project.findOne({
-            where: { id: req.query.pid },
-            attributes: [],
-            include: {
-                model: user,
-                attributes: ['email'],
-                through: { attributes: [] }
-            }
+          where: { id: req.query.pid },
+          attributes: [],
+          include: {
+            model: user,
+            attributes: ['email'],
+            through: { attributes: [] }
+          }
         })
-
-        let prtodo
-        let obj = {}
-        let memberEmail = []
-        member.users.forEach(ele => memberEmail.push(ele.email))
-        obj['member'] = memberEmail
-
-        if (req.query.day) {
+        try {
+          let prtodo
+          let obj = {}
+          let memberEmail = []
+          member.users.forEach(ele => memberEmail.push(ele.email))
+          obj['member'] = memberEmail
+          if (req.query.day) {
             prtodo = await project.findOne({
-                where: { id: req.query.pid },
-                attributes: ['adminUserId'],
+              where: { id: req.query.pid },
+              attributes: ['adminUserId'],
+              include: {
+                model: todolist,
+                where: { createdAt: req.query.day },
+                attributes: ['id', 'body', 'IsChecked'],
                 include: {
-                    model: todolist,
-                    where: { createdAt: req.query.day },
-                    attributes: ['id', 'body', 'IsChecked'],
-                    include: {
-                        model: user,
-                        attributes: ['userName']
-                    }
+                  model: user,
+                  attributes: ['userName']
                 }
+              }
             })
-        }
-        else {
+          }
+          else {
             prtodo = await project.findOne({
-                where: { id: req.query.pid },
-                attributes: ['adminUserId'],
+              where: { id: req.query.pid },
+              attributes: ['adminUserId'],
+              include: {
+                model: todolist,
+                attributes: ['id', 'body', 'IsChecked'],
                 include: {
-                    model: todolist,
-                    attributes: ['id', 'body', 'IsChecked'],
-                    include: {
-                        model: user,
-                        attributes: ['userName']
-                    }
+                  model: user,
+                  attributes: ['userName']
                 }
+              }
             })
-        }
-        if (!prtodo) {
-            prtodo = await project.findOne({
-                where: { id: req.query.pid },
-                attributes: ['adminUserId']
-            })
-        }
-        obj['project'] = prtodo
-
-        obj.project.adminUserId === req.session.userid
+          }
+          if (prtodo) {
+            obj['project'] = prtodo
+          } else {
+            obj['project'] = {}
+          }
+          obj.project.adminUserId === req.session.userid
             ? obj.project.adminUserId = true
             : obj.project.adminUserId = false
-
-        res.send(obj)
-
-
-
-    },
+          res.send(obj)
+        } catch (error) {
+          console.log(error);
+        }
+      },
 
     login: async (req, res) => {
         const { email, password } = req.body;
