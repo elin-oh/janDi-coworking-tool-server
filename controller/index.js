@@ -5,7 +5,9 @@ const {
   users_projects,
   sequelize,
 } = require('../models');
+const jwt = require("jsonwebtoken");
 const crypto = require('crypto');
+const {secret} = require('../config/config');
 
 module.exports = {
   userinfo: async (req, res) => {
@@ -33,57 +35,57 @@ module.exports = {
         res.status(500).send(err);
       });
   },
-  maininfo: async (req, res) => {
-    if (!req.session.userid) {
+  main: async (req, res) => {
+    if (!req.cookies.accessToken){
       return res.status(401).send('need user session');
-    }
-    let prId = await user.findOne({
-      where: { id: req.session.userid },
-      attributes: [],
-      include: {
-        model: project,
-        attributes: ['id'],
-        through: { attributes: [] },
-      },
-    });
-    let prList = prId.projects.map((ele) => ele.id);
-    let result = await Promise.all(
-      prList.map((prID) =>
-        user.findOne({
-          where: { id: req.session.userid },
-          attributes: [],
+    }else{
+      try{
+        const JWT = jwt.verify(req.cookies.accessToken, secret.secret_jwt);
+        let prId = await user.findOne({
+          where: { email: JWT.userEmail },
           include: {
             model: project,
-            where: { id: prID },
-            attributes: ['id', 'projectName'],
+            attributes: ['id'],
             through: { attributes: [] },
-            include: {
-              model: todolist,
-              attributes: [
-                'createdAt',
-                [sequelize.fn('COUNT', 'createdAt'), 'COUNT'],
-              ],
-              group: ['createdAt'],
-              order: ['createdAt'],
-              separate: true,
-            },
           },
-        })
-      )
-    );
-    if (result) {
-      let projectResult = result.map((item) => item.projects[0]);
-      projectResult.forEach((item) => {
-        if (item.todolists.length !== 0) {
-          item.todolists[0].dataValues = item.todolists.reduce((a, c) => {
-            a[c.dataValues.createdAt] = c.dataValues.COUNT;
-            return a;
-          }, {});
-        }
-      });
-      res.status(200).send(projectResult);
-    } else {
-      res.status(200).send([]);
+        });
+        let prList = prId.projects.map((ele) => ele.id);
+        let todoList = await Promise.all(
+          prList.map(async (prID) =>{
+            let obj = {};
+            obj.id = prID;
+            
+            let projectName  = await project.findOne({
+              where:{id:prID},
+              attributes:['projectName']
+            });
+
+            obj.projectName = projectName.projectName;
+            let todoLists = await todolist.findAll({
+              where:{projectId:prID}
+            });
+            
+            console.log(projectName);
+            if(todoLists && todoLists.length>0){
+              
+              todoLists.map(todo=>{
+                return todo.dataValues;
+              }).forEach(todo=>{
+                if(!obj[todo.createdAt]){
+                  obj[todo.createdAt] = [];
+                  obj[todo.createdAt].push(todo);
+                }else{
+                  obj[todo.createdAt].push(todo);
+                }
+              })
+            }
+            return obj;
+          })
+        );
+        res.send(todoList);
+      }catch(err){
+        console.log(err);
+      }
     }
   },
 
@@ -147,20 +149,30 @@ module.exports = {
 
   login: async (req, res) => {
     const { email, password } = req.body;
-    var sess = req.session;
     user
       .findOne({
         where: {
           email: email,
-          password: password,
+          password: password
         },
       })
-      .then((result) => {
+      .then(async (result) => {
         if (result === null) {
           res.status(404).send('Invalid user or Wrong password');
         } else {
-          sess.userid = result.id;
 
+          let userId = await user.findOne({
+            where: { email: email },
+            attributes: ['id']
+          });
+
+          const accessToken = jwt.sign({
+            userEmail: email,
+            userId:userId.id
+          },
+          secret.secret_jwt,
+          {expiresIn:"7d"});
+          res.cookie('accessToken', accessToken);
           res.status(200).json({
             id: result.id,
             email: result.email,
@@ -191,8 +203,6 @@ module.exports = {
   },
   userpost: async (req, res) => {
     const { email, userName, password } = req.body;
-    console.log(req.body);
-    console.log(dotenv.config());
 
     try {
       if (!email || !password || !userName) {
@@ -219,21 +229,32 @@ module.exports = {
             res.status(500).send(err);
           });
       }
-    } catch (err) {}
+    } catch (err){
+      console.log(err)
+    }
   },
   projectpost: async (req, res) => {
     const { projectName, member } = req.body;
-    var sess = req.session;
+    const JWT = jwt.verify(req.cookies.accessToken, secret.secret_jwt);
+    //console.log(JWT);
 
     if (!projectName) {
       res.status(422).send('insufficient parameters supplied');
-    } else if (!sess.id) {
+    } else if (!JWT) {
       res.status(422).send('you are not login');
     } else {
+
+      let prId = await user.findOne({
+        where: { email: JWT.userEmail },
+        attributes:['id']
+      });
+
+      //console.log('****************prId, projectpost**********',prId.id);
+      res.status(201).json();
       project
         .create({
           projectName: projectName,
-          adminUserId: sess.userid,
+          adminUserId: prId.id,
         })
         .then(async (project) => {
           const data = await project.get({ plain: true });
@@ -242,7 +263,7 @@ module.exports = {
 
           users_projects.create({
             projectId: data.id,
-            userId: sess.userid,
+            userId: prId.id,
           });
 
           if (member) {
@@ -266,29 +287,25 @@ module.exports = {
     }
   },
   todolistpost: async (req, res) => {
-    const { body, projectId, email } = req.body;
+    const { body, projectId } = req.body;
     let currentUserId;
-
+    const JWT = jwt.verify(req.cookies.accessToken, secret.secret_jwt);
+    console.log(JWT);
     if (!body || !projectId) {
       res.status(422).send('insufficient parameters supplied');
     } else {
-      if (!email) {
-        currentUserId = req.session.userid;
-      } else {
-        await user.findOne({ where: { email: email } }).then((data) => {
-          currentUserId = data.id;
-        });
-      }
-
+      currentUserId = JWT.userId;
       todolist
         .create({
           body: body,
           projectId: projectId,
           userId: currentUserId,
-          IsChecked: false,
+          IsChecked: false
         })
         .then(async (todolist) => {
           const data = await todolist.get({ plain: true });
+          console.log(todolist);
+          console.log(data);
           res.status(201).json(data);
         })
         .catch((err) => {
@@ -316,7 +333,6 @@ module.exports = {
 
       if (newPassword !== null) {
         if (hasingPassword === userCurrent.password) {
-          var shasum = crypto.createHmac('sha512', 'jandikey');
           shasum.update(newPassword);
           hasingPassword = shasum.digest('hex');
           userCurrent.password = hasingPassword;
@@ -340,8 +356,8 @@ module.exports = {
     }
     if (member !== null) {
       for (let i = 0; i < member.length; i++) {
-        currentEmail = member[i];
-        memberuser = await user.findOne({ where: { email: currentEmail } });
+        let currentEmail = member[i];
+        let memberuser = await user.findOne({ where: { email: currentEmail } });
 
         users_projects.create({
           projectId: id,
@@ -392,7 +408,7 @@ module.exports = {
     let memberuser = await user.findOne({ where: { email: email } });
     let userId = memberuser && memberuser.id;
     if (userId) {
-      let usercheck = await user.findByPk(userId).catch((err) => {
+      await user.findByPk(userId).catch((err) => {
         res.status(500).send(err);
       });
       res.status(200).json({ isUser: true });

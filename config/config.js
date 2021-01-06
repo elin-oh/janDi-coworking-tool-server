@@ -5,7 +5,7 @@ module.exports = {
     "username": process.env.DATABASE_USERNAME,
     "password": process.env.DATABASE_PASSWORD,
     "database": process.env.DATABASE_NAME,
-    "host": "jandi.cq1ribsr3elc.ap-northeast-2.rds.amazonaws.com",
+    "host": process.env.DATABASE_HOST,
     "dialect": "mysql",
     "timezone": "+09:00"
   },
@@ -13,7 +13,7 @@ module.exports = {
     "username": process.env.DATABASE_USERNAME,
     "password": process.env.DATABASE_PASSWORD,
     "database": process.env.DATABASE_NAME,
-    "host": "jandi.cq1ribsr3elc.ap-northeast-2.rds.amazonaws.com",
+    "host": process.env.DATABASE_HOST,
     "dialect": "mysql",
     "timezone": "+09:00"
   },
@@ -21,9 +21,13 @@ module.exports = {
     "username": process.env.DATABASE_USERNAME,
     "password": process.env.DATABASE_PASSWORD,
     "database": process.env.DATABASE_NAME,
-    "host": "jandi.cq1ribsr3elc.ap-northeast-2.rds.amazonaws.com",
+    "host": process.env.DATABASE_HOST,
     "dialect": "mysql",
     "timezone": "+09:00"
+  },
+  secret: {
+    secret_pw: process.env.MY_SECRET_KEY,
+    secret_jwt: process.env.JWT_SECRET_KEY,
   }
 }
 

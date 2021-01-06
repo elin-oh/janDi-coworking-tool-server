@@ -2,13 +2,11 @@ const express = require('express');
 const app = express();
 const cors = require('cors');
 const session = require('express-session');
-const path = require('path');
-const fs = require('fs');
-var http = require('http');
-var https = require('https');
-const indexRouter = require('./routers/index');
+const cookieParser = require('cookie-parser');
+const config = require('./config/config');
 
-app.use(express.json());
+const path = require('path');
+const indexRouter = require('./routers/index');
 
 app.use(
   session({
@@ -18,18 +16,18 @@ app.use(
   })
 );
 
-app.use(express.json());
-
 app.use(
   cors({
-    origin: ['http://localhost:5000'],
+    origin: ['http://localhost:3000'],
     methods: ['GET,POST,PUT,DELETE'],
     credentials: true,
   })
 );
+app.use(express.json());
+app.use(cookieParser());
+app.set('jwt-secret', config.secret)
 
 app.options('*', cors());
-
 app.use(express.static(path.join(__dirname, '/public')));
 app.use('/login', express.static(path.join(__dirname, '/public')));
 app.use('/project', express.static(path.join(__dirname, '/public')));
