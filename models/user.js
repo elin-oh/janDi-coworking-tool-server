@@ -24,13 +24,13 @@ module.exports = (sequelize, DataTypes) => {
   {
     hooks: {
       beforeCreate: (data, option) => {
-        var shasum = crypto.createHmac('sha512', 'jandikey');
+        var shasum = crypto.createHmac('sha512',process.env.CRYPTO_KEY);
         shasum.update(data.password);
         data.password = shasum.digest('hex');
       },
       beforeFind: (data, option) => {
         if (data.where.password) {
-          var shasum = crypto.createHmac('sha512', 'jandikey');
+          var shasum = crypto.createHmac('sha512', process.env.CRYPTO_KEY);
           shasum.update(data.where.password);
           data.where.password = shasum.digest('hex');        
         }

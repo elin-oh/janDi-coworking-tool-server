@@ -11,12 +11,13 @@ const {secret} = require('../config/config');
 
 module.exports = {
   userinfo: async (req, res) => {
-    if (!req.session.userid) {
+    const JWT = jwt.verify(req.cookies.accessToken, secret.secret_jwt);
+    if (!JWT) {
       return res.status(401).send('need user session');
     }
     user
       .findOne({
-        where: { id: req.session.userid },
+        where: { email: JWT.userEmail },
         attributes: ['email', 'userName'],
         include: [
           {
@@ -65,7 +66,6 @@ module.exports = {
               where:{projectId:prID}
             });
             
-            console.log(projectName);
             if(todoLists && todoLists.length>0){
               
               todoLists.map(todo=>{
@@ -146,7 +146,20 @@ module.exports = {
       console.log(error);
     }
   },
-
+  logincheck: async(req,res)=>{
+    try{
+      const JWT = jwt.verify(req.cookies.accessToken, secret.secret_jwt);
+      console.log(JWT);
+      if(JWT){
+        res.status(200).send();
+      }else{
+        res.status(404).send();
+      }
+    }catch(err){
+      res.status(404).send();
+    }
+    
+  },
   login: async (req, res) => {
     const { email, password } = req.body;
     user
@@ -187,19 +200,14 @@ module.exports = {
       });
   },
   logout: async (req, res) => {
-    var sess = req.session;
-
-    if (sess.userid === null) {
-      res.status(400).send('you are currently not logined');
-    } else {
-      sess.destroy((err) => {
-        if (err) {
-          res.status(500).send(err);
-        } else {
-          res.status(205).send('successfully signed out!');
-        }
-      });
+    try{
+      res.clearCookie("accessToken")
+      res.status(200).send();
+    }catch(err){
+      console.log(err);
+      res.status(500).end();
     }
+    
   },
   userpost: async (req, res) => {
     const { email, userName, password } = req.body;
@@ -236,7 +244,6 @@ module.exports = {
   projectpost: async (req, res) => {
     const { projectName, member } = req.body;
     const JWT = jwt.verify(req.cookies.accessToken, secret.secret_jwt);
-    //console.log(JWT);
 
     if (!projectName) {
       res.status(422).send('insufficient parameters supplied');
@@ -249,7 +256,6 @@ module.exports = {
         attributes:['id']
       });
 
-      //console.log('****************prId, projectpost**********',prId.id);
       res.status(201).json();
       project
         .create({
@@ -290,7 +296,6 @@ module.exports = {
     const { body, projectId } = req.body;
     let currentUserId;
     const JWT = jwt.verify(req.cookies.accessToken, secret.secret_jwt);
-    console.log(JWT);
     if (!body || !projectId) {
       res.status(422).send('insufficient parameters supplied');
     } else {
@@ -304,8 +309,6 @@ module.exports = {
         })
         .then(async (todolist) => {
           const data = await todolist.get({ plain: true });
-          console.log(todolist);
-          console.log(data);
           res.status(201).json(data);
         })
         .catch((err) => {
@@ -313,37 +316,53 @@ module.exports = {
         });
     }
   },
-  userchange: async (req, res) => {
-    const { userName, currentPassword, newPassword } = req.body;
+  passwordchange: async(req,res)=>{
+    const { currentPassword, newPassword } = req.body;
 
-    let sessUserId = req.session.userid;
+    const JWT = jwt.verify(req.cookies.accessToken, secret.secret_jwt);
+    
     let result;
     let hasingPassword;
-    let userCurrent = await user.findByPk(sessUserId);
-
-    if (userName !== undefined) {
-      userCurrent.userName = userName;
-      result = await userCurrent.save();
-      res.status(202).json(`id:${result.id}`);
-    }
+    let userCurrent = await user.findByPk(JWT.userId);
+    console.log(userCurrent);
     if (currentPassword !== null) {
-      var shasum = crypto.createHmac('sha512', 'jandikey');
+      let shasum = crypto.createHmac('sha512', process.env.CRYPTO_KEY);
       shasum.update(currentPassword);
       hasingPassword = shasum.digest('hex');
 
       if (newPassword !== null) {
         if (hasingPassword === userCurrent.password) {
-          shasum.update(newPassword);
-          hasingPassword = shasum.digest('hex');
+          let new_shasum = crypto.createHmac('sha512', process.env.CRYPTO_KEY);
+          new_shasum.update(newPassword);
+          hasingPassword = new_shasum.digest('hex');
           userCurrent.password = hasingPassword;
+          console.log(userCurrent);
           result = await userCurrent.save();
+          console.log(result);
           res.status(202).json(`id:${result.id}`);
         } else {
           res.status(422).send('password not right');
         }
+      }else{
+        res.status(422).send('password not right');
       }
-      // 서버에 저장된 해싱된 비밀번호랑 입력된 비밀번호가 같은 경우
-      // 맞으면, 새 패스워드를 데이터 베이스에 저장
+    }else{
+      res.status(422).send('password not right');
+    }
+  },
+  userchange: async (req, res) => {
+    const { userName } = req.body;
+
+    const JWT = jwt.verify(req.cookies.accessToken, secret.secret_jwt);
+    
+    let result;
+    let userCurrent = await user.findByPk(JWT.userId);
+
+    console.log(userCurrent);
+    if (userName !== undefined) {
+      userCurrent.userName = userName;
+      result = await userCurrent.save();
+      res.status(202).json(`id:${result.id}`);
     }
   },
   projectchange: async (req, res) => {
@@ -379,7 +398,7 @@ module.exports = {
     }
 
     await currentTodolist.save();
-    res.status(202).end();
+    res.status(202).send(currentTodolist);
   },
   projectdelete: async (req, res) => {
     // 프로젝트 삭제시 프로젝트와 연관된 todolist도 같이 삭제 되어야 함,
